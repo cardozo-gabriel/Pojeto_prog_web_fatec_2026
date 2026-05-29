@@ -1,0 +1,67 @@
+Estrutura de pastas e arquivos do projeto
+
+1. Raiz do projeto (root)
+- balanceador.py: não faz parte do projeto atual porque a rota de balanceamento usa o módulo em app/balanceador. Se existir apenas como arquivo solto, pode ser um arquivo antigo ou de teste. Recomendo verificar se está em uso antes de manter.
+- clear_database.py: utilitário de linha de comando para limpar o banco SQLite e resetar os IDs auto-increment. Serve para reiniciar os testes com a base vazia. Útil enquanto estiver testando localmente.
+- contexto_amanha.md: nota de contexto do projeto. Não faz parte do funcionamento da aplicação e pode ser removido se você não precisar manter o histórico de conversas/decisões.
+- database.db: arquivo do banco de dados SQLite. Ele armazena os dados reais de usuários, jogadores, partidas e confirmações. Não é código, mas é necessário se você quiser manter o estado do sistema. Se quiser começar do zero, pode remover e deixar o app recriar com Base.metadata.create_all(bind=engine).
+- DOCUMENTACAO_COMPLETA.md / DOCUMENTACAO_TECNICA.md: documentação extra. Não são necessários para a execução da API, mas podem ser mantidos como referência se contiverem anotações importantes.
+- patch_partidas_full.py / patch_update_jogadores.py / patch_update_partidas.py: scripts de patch usados para aplicar alterações no código. São arquivos auxiliares e, depois que o código já foi atualizado, não são necessários para rodar a aplicação. Podem ser removidos se você não quiser manter scripts históricos.
+- requirements.txt: lista de dependências Python necessárias para instalar o projeto.
+- tests/: pasta de testes automatizados para validar partes do sistema.
+
+2. app/
+- __init__.py: arquivo vazio que transforma a pasta app em um pacote Python. Ele não precisa conter código; sua função é dizer ao Python que é um pacote, permitindo imports como from app.routes import ... . Por isso os __init__.py vazios são normais e não significam erro.
+- main.py: ponto de entrada da API FastAPI. Cria a aplicação, inicializa as tabelas no banco e registra os routers (rotas). Também define a rota /health para checar se o servidor está vivo.
+
+3. app/config/
+- __init__.py: pacote vazio para permitir imports do módulo config.
+- database.py: configura a conexão com SQLite via SQLAlchemy, cria engine, sessão e base declarativa. Também define get_db() para fornecer sessões ao FastAPI.
+- security.py: contém a geração e verificação de senhas (bcrypt), criação de JWT e extração do usuário atual a partir do token Bearer. Usado por auth e por todas as rotas protegidas.
+- settings.py: configurações do projeto, como URL do banco, chave secreta JWT, algoritmo e tempo de expiração. Também lê variáveis de ambiente se houver um arquivo .env.
+
+4. app/models/
+- __init__.py: pacote vazio para permitir imports do módulo models.
+- usuario_model.py: modelo SQLAlchemy da tabela usuarios. Cada usuário tem id, nome, email e senha.
+- jogadores_model.py: modelo SQLAlchemy da tabela jogadores. Cada jogador tem id, nome e habilidades nos três setores.
+- partidas_model.py: modelo SQLAlchemy da tabela partidas. Cada partida tem id, tipo, data_hora, local, criado_por e status.
+- jogador_time_model.py: modelo SQLAlchemy da tabela jogador_time. Representa a confirmação de um jogador em uma partida, com time e posição selecionada.
+
+5. app/schemas/
+- __init__.py: pacote vazio para permitir imports do módulo schemas.
+- usuario_schema.py: define os schemas Pydantic para criação de usuário e resposta de usuário.
+- auth_schema.py: define os schemas para login e resposta de token.
+- jogadores_schema.py: define os schemas para criação, atualização e resposta de jogador.
+- partidas_schema.py: define os schemas para criação, atualização e resposta de partida.
+- jogador_time_schema.py: define os schemas para confirmação de jogador na partida e resposta de confirmação.
+- balanceamento_schema.py: define os schemas de resposta do balanceamento, agora incluindo nome e posição do jogador.
+
+6. app/routes/
+- __init__.py: pacote vazio para permitir imports do módulo routes.
+- auth_routes.py: rotas de autenticação (/auth/register, /auth/login, /auth/me, /auth/me delete). Cria usuário, autentica, retorna usuário atual e permite apagar o usuário autenticado.
+- jogadores_routes.py: rotas CRUD de jogadores (/jogadores, /jogadores/{id}). Cria, lista, atualiza e remove jogadores.
+- partidas_routes.py: rotas CRUD de partidas e confirmações. Cria partidas, lista partidas, atualiza e deleta partidas, confirma jogadores nas partidas, atualiza/deleta confirmações e lista jogadores confirmados com detalhes.
+- balanceamento_routes.py: rota de balanceamento (/balanceamento) que usa os jogadores confirmados de uma partida para distribuir os times de forma balanceada.
+
+7. tests/
+- test_security.py: valida a lógica de hash e verificação de senha usando bcrypt. Garante que a função de autenticação esteja funcionando.
+- test_partidas_confirmados.py: valida que a rota listar_confirmados_partida retorna os dados completos corretos de jogador confirmado na partida. Usa um banco em memória para testes isolados.
+
+Arquivos úteis para excluir ou considerar desnecessários
+- patch_partidas_full.py, patch_update_jogadores.py, patch_update_partidas.py: são scripts de atualização/correção de código. Não são necessários para rodar a API.
+- contexto_amanha.md: apenas nota de contexto, não é parte da aplicação.
+- DOCUMENTACAO_COMPLETA.md / DOCUMENTACAO_TECNICA.md: não fazem parte da execução, mas são úteis apenas como documentação extra. Se você não precisar delas, pode remover.
+- __pycache__/ e arquivos .pyc: são gerados automaticamente pelo Python e podem ser excluídos sem prejuízo. Eles voltam a ser criados quando a aplicação rodar novamente.
+- balanceador.py no root: se não estiver sendo usado pela aplicação, é um arquivo extra e pode ser removido. A lógica de balanceamento real está em app/balanceador/balanceador.py.
+
+Por que os arquivos __init__.py estão vazios?
+- Em Python, um __init__.py vazio transforma uma pasta em um pacote Python.
+- Isso permite importar módulos da pasta usando notação ponto, por exemplo: from app.routes import partidas_routes.
+- Não é obrigatório ter código dentro dele; o arquivo pode estar vazio e ainda assim cumprir sua função de marcar o pacote.
+- Por isso você viu __init__.py vazios em app/, app/config/, app/models/, app/routes/ e app/schemas/.
+
+Resumo geral
+- O projeto é uma API FastAPI com autenticação JWT, CRUD de jogadores e partidas, confirmação de jogadores e balanceamento de times.
+- A pasta app contém o código principal: configurações, modelos, rotas e schemas.
+- A raiz contém utilitários e arquivos de suporte, alguns necessários (requirements, database.db, clear_database.py) e outros opcionais (patch_*.py, documentação, notas).
+- Os arquivos vazios __init__.py são apenas sinalizadores de pacote e não indicam falta de uso.
