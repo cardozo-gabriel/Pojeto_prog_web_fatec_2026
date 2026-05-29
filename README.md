@@ -46,7 +46,3 @@ Este projeto é uma API em FastAPI para gerenciar jogadores, partidas, confirma�
   python clear_database.py
   ```
 
-## Próximo passo para publicar no GitHub
-
-- Se quiser que eu conecte ao GitHub, precisamos criar o repositório remoto e adicionar o remote `origin`.
-- Use um token do GitHub ou a GitHub CLI para criar o repositório e fazer push.
